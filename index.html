@@ -1,27 +1,20 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scan</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #111827;
-      --muted: #9ca3af;
-      --text: #f9fafb;
-      --accent: #22c55e;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --border: #1f2937;
+      --bg: #0f172a; --card: #111827; --muted: #9ca3af; --text: #f9fafb;
+      --accent: #22c55e; --danger: #ef4444; --warning: #f59e0b; --border: #1f2937;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; font-family: "Cairo", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0; font-family: "Cairo", system-ui, sans-serif;
       background: radial-gradient(1200px 600px at 80% -10%, #1f2937 10%, var(--bg) 40%),
                   radial-gradient(1200px 600px at 20% 110%, #0b1120 10%, var(--bg) 40%);
-      color: var(--text);
-      min-height: 100vh; display: grid; place-items: center; padding: 24px;
+      color: var(--text); min-height: 100vh; display: grid; place-items: center; padding: 24px;
     }
     .container {
       width: 100%; max-width: 760px; background: var(--card);
@@ -49,6 +42,11 @@
     }
     button:hover { box-shadow: 0 8px 20px rgba(37,99,235,0.35); }
     button:active { transform: translateY(1px); }
+    /* ✅ مؤشر التحميل */
+    button.loading {
+      background: linear-gradient(135deg, #444, #666);
+      cursor: wait;
+    }
     .result {
       margin-top: 18px; padding: 14px; border-radius: 12px; border: 1px dashed var(--border);
       background: #0b1120;
@@ -66,66 +64,39 @@
     .key { color: var(--muted); }
     .val { color: var(--text); word-break: break-word; }
     .footer { margin-top: 18px; color: var(--muted); font-size: 0.85rem; }
-    .small { font-size: 0.85rem; }
     .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 class="title">Link checking tool</h1>
-    <p class="subtitle">Enter the link to check</p>
+    <h1 class="title">أداة فحص الروابط</h1>
+    <p class="subtitle">أدخل رابطًا للتحقق من صحته، اكتشاف البروتوكول، واطّلاع سريع على حالته.</p>
 
     <div class="field">
-      <input id="urlInput" type="url" placeholder="https://example.com/path" autocomplete="on" />
-      <button id="checkBtn">Check the link</button>
+      <input id="urlInput" type="url" placeholder="مثال: https://example.com/path?x=1" autocomplete="on">
+      <button id="checkBtn">فحص الرابط</button>
     </div>
 
     <div id="result" class="result hidden">
       <div id="statusBadges"></div>
       <div class="list">
-        <div class="item">
-          <div class="key">الرابط الأصلي</div>
-          <div id="origUrl" class="val"></div>
-        </div>
-        <div class="item">
-          <div class="key">الحالة</div>
-          <div id="statusText" class="val"></div>
-        </div>
-        <div class="item">
-          <div class="key">البروتوكول</div>
-          <div id="protocol" class="val"></div>
-        </div>
-        <div class="item">
-          <div class="key">المضيف (Domain)</div>
-          <div id="hostname" class="val"></div>
-        </div>
-        <div class="item">
-          <div class="key">المنفذ</div>
-          <div id="port" class="val"></div>
-        </div>
-        <div class="item">
-          <div class="key">المسار</div>
-          <div id="path" class="val"></div>
-        </div>
-        <div class="item">
-          <div class="key">المعاملات (Query)</div>
-          <div id="query" class="val"></div>
-        </div>
-        <div class="item">
-          <div class="key">الـ URL المنسّق</div>
-          <div id="normalized" class="val"></div>
-        </div>
+        <div class="item"><div class="key">الرابط الأصلي</div><div id="origUrl" class="val"></div></div>
+        <div class="item"><div class="key">الحالة</div><div id="statusText" class="val"></div></div>
+        <div class="item"><div class="key">البروتوكول</div><div id="protocol" class="val"></div></div>
+        <div class="item"><div class="key">المضيف (Domain)</div><div id="hostname" class="val"></div></div>
+        <div class="item"><div class="key">المنفذ</div><div id="port" class="val"></div></div>
+        <div class="item"><div class="key">المسار</div><div id="path" class="val"></div></div>
+        <div class="item"><div class="key">المعاملات (Query)</div><div id="query" class="val"></div></div>
+        <div class="item"><div class="key">الـ URL المنسّق</div><div id="normalized" class="val"></div></div>
       </div>
-
-      <div class="footer">
-        ملاحظة: إذا أردت التحقق من حالة HTTP (مثل 200/404)، اربط الواجهة بـ API خلفي يقوم بطلب الرابط ثم يعيد الحالة.
-      </div>
+      <div class="footer">ملاحظة: فحص الحالة يتم عبر backend مباشرةً.</div>
     </div>
   </div>
 
   <script>
-    // إعدادات اختيارية: نقطة نهاية خلفية لفحص الحالة HTTP (ضع رابط API خاصتك هنا إن توفر)
-   const BACKEND_STATUS_CHECK_URL = "https://link-checker.onrender.com/check?url=";
+    // ✅ عنوان الإنتاج (غيّره إلى رابطك عند النشر)
+    const BACKEND_STATUS_CHECK_URL = "http://localhost:5000/check?url=";    // للتطوير المحلي يمكنك استخدام:
+    // const BACKEND_STATUS_CHECK_URL = "http://localhost:5000/check?url=";
 
     const input = document.getElementById("urlInput");
     const btn = document.getElementById("checkBtn");
@@ -142,7 +113,6 @@
 
     function isValidUrl(str) {
       try {
-        // يسمح ببروتوكولات http/https فقط هنا. يمكن إضافة mailto:, ftp: عند الحاجة.
         const u = new URL(str);
         return ["http:", "https:"].includes(u.protocol);
       } catch {
@@ -152,30 +122,25 @@
 
     function normalizeUrl(str) {
       const u = new URL(str);
-      // إزالة الـ default ports، وترتيب الكويري أبجديًا لتوحيد الشكل
-      const normalizedUrl = new URL(u.toString());
-      if ((normalizedUrl.protocol === "http:" && normalizedUrl.port === "80") ||
-          (normalizedUrl.protocol === "https:" && normalizedUrl.port === "443")) {
-        normalizedUrl.port = "";
+      const norm = new URL(u.toString());
+      if ((norm.protocol === "http:" && norm.port === "80") ||
+          (norm.protocol === "https:" && norm.port === "443")) {
+        norm.port = "";
       }
-      // ترتيب معاملات الاستعلام
-      const params = [...normalizedUrl.searchParams.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-      normalizedUrl.search = "";
-      for (const [k, v] of params) normalizedUrl.searchParams.append(k, v);
-      // إزالة الـ fragment إن رغبت: normalizedUrl.hash = "";
-      return normalizedUrl.toString();
+      const params = [...norm.searchParams.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+      norm.search = "";
+      for (const [k, v] of params) norm.searchParams.append(k, v);
+      return norm.toString();
     }
 
     async function checkHttpStatus(url) {
       if (!BACKEND_STATUS_CHECK_URL) return { supported: false };
       try {
         const res = await fetch(BACKEND_STATUS_CHECK_URL + encodeURIComponent(url), { method: "GET" });
-        if (!res.ok) throw new Error("Backend error");
-        const data = await res.json();
-        // نتوقع أن يعيد الـ backend: { reachable: true/false, status: 200, finalUrl: "..." }
-        return { supported: true, ...data };
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return { supported: true, ...(await res.json()) };
       } catch (e) {
-        return { supported: true, error: e.message || "خطأ غير متوقع" };
+        return { supported: true, error: e.message };
       }
     }
 
@@ -183,40 +148,40 @@
       statusBadges.innerHTML = "";
       const badges = [];
 
-      badges.push({
-        text: isValid ? "صيغة صحيحة" : "صيغة غير صحيحة",
-        cls: isValid ? "ok" : "bad"
-      });
+      badges.push({ text: isValid ? "✅ صيغة صحيحة" : "❌ صيغة غير صحيحة", cls: isValid ? "ok" : "bad" });
 
       if (isValid) {
-        badges.push({ text: isHttps ? "آمن (HTTPS)" : "غير مشفّر (HTTP)", cls: isHttps ? "ok" : "warn" });
-        badges.push({ text: hasQuery ? "يحوي معاملات" : "لا يحوي معاملات", cls: hasQuery ? "warn" : "muted" });
-        badges.push({ text: hasHash ? "يحوي Hash" : "لا يحوي Hash", cls: hasHash ? "muted" : "muted" });
+        badges.push({ text: isHttps ? "🔒 آمن (HTTPS)" : "⚠️ غير مشفّر (HTTP)", cls: isHttps ? "ok" : "warn" });
+        badges.push({ text: hasQuery ? "📊 يحوي معاملات" : "— لا يحوي معاملات", cls: hasQuery ? "warn" : "muted" });
+        badges.push({ text: hasHash ? "#️⃣ يحوي Hash" : "— لا يحوي Hash", cls: hasHash ? "muted" : "muted" });
       }
 
-      if (httpStatus && (httpStatus.reachable || httpStatus.status)) {
-        const ok = httpStatus.reachable && (httpStatus.status >= 200 && httpStatus.status < 400);
-        badges.push({
-          text: `حالة HTTP: ${httpStatus.status ?? (httpStatus.reachable ? "متاح" : "غير متاح")}`,
-          cls: ok ? "ok" : "bad"
-        });
-      } else if (httpStatus && httpStatus.error) {
-        badges.push({ text: `فشل فحص الحالة (${httpStatus.error})`, cls: "warn" });
+      if (httpStatus?.status) {
+        const ok = httpStatus.status >= 200 && httpStatus.status < 400;
+        badges.push({ text: `🌐 حالة HTTP: ${httpStatus.status}`, cls: ok ? "ok" : "bad" });
+      } else if (httpStatus?.error) {
+        badges.push({ text: `⚠️ خطأ: ${httpStatus.error}`, cls: "warn" });
+      } else if (httpStatus?.supported === false) {
+        badges.push({ text: "🔧 Backend غير مفعّل", cls: "muted" });
       }
 
-      for (const b of badges) {
+      badges.forEach(b => {
         const span = document.createElement("span");
         span.className = `badge ${b.cls}`;
         span.textContent = b.text;
         statusBadges.appendChild(span);
-      }
+      });
     }
 
     btn.addEventListener("click", async () => {
       const urlStr = input.value.trim();
       result.classList.add("hidden");
 
-      // فحص الصيغة أولاً
+      // ✅ مؤشر التحميل
+      btn.classList.add("loading");
+      btn.textContent = "جاري الفحص...";
+      btn.disabled = true;
+
       const valid = isValidUrl(urlStr);
       let urlObj = null;
 
@@ -229,54 +194,39 @@
         path.textContent = urlObj.pathname || "/";
         query.textContent = urlObj.search || "(لا توجد معاملات)";
         normalized.textContent = normalizeUrl(urlStr);
-
         statusText.textContent = "الرابط بصيغة صحيحة.";
       } else {
-        origUrl.textContent = urlStr || "(فارغ)";
-        protocol.textContent = "-";
-        hostname.textContent = "-";
-        port.textContent = "-";
-        path.textContent = "-";
-        query.textContent = "-";
-        normalized.textContent = "-";
-        statusText.textContent = "صيغة الرابط غير صحيحة. تأكد من البداية بـ http:// أو https://";
+        [origUrl, protocol, hostname, port, path, query, normalized].forEach(el => el.textContent = "-");
+        statusText.textContent = "صيغة الرابط غير صحيحة. استخدم http:// أو https://";
       }
 
-      // محاولة فحص حالة HTTP عبر Backend (اختياري)
-      let httpStatus = null;
-      if (valid) {
-        httpStatus = await checkHttpStatus(urlStr);
-        if (httpStatus.supported) {
-          if (httpStatus.error) {
-            statusText.textContent += ` (فشل فحص الحالة: ${httpStatus.error})`;
-          } else if (httpStatus.status) {
-            statusText.textContent += ` | حالة HTTP: ${httpStatus.status}`;
-          } else if (httpStatus.reachable !== undefined) {
-            statusText.textContent += ` | الوصول: ${httpStatus.reachable ? "ممكن" : "غير ممكن"}`;
-          }
-        } else {
-          statusText.textContent += " | فحص الحالة HTTP غير مفعّل (أضف Backend).";
-        }
+      const httpStatus = valid ? await checkHttpStatus(urlStr) : null;
+
+      if (httpStatus?.error) {
+        statusText.textContent += ` | ${httpStatus.error}`;
+      } else if (httpStatus?.status) {
+        statusText.textContent += ` | الحالة: ${httpStatus.status}`;
       }
 
       renderBadges({
         isValid: valid,
-        isHttps: valid ? urlObj.protocol === "https:" : false,
-        hasQuery: valid ? !!urlObj.search : false,
-        hasHash: valid ? !!urlObj.hash : false,
+        isHttps: valid && urlObj?.protocol === "https:",
+        hasQuery: valid && !!urlObj?.search,
+        hasHash: valid && !!urlObj?.hash,
         httpStatus
       });
 
       result.classList.remove("hidden");
+
+      // ✅ إزالة مؤشر التحميل
+      btn.classList.remove("loading");
+      btn.textContent = "فحص الرابط";
+      btn.disabled = false;
     });
 
-    // تحسينات صغيرة: الضغط على Enter يبدأ الفحص
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") btn.click();
-
     });
-    // ... الكود السابق
-
   </script>
 </body>
 </html>
